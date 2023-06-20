@@ -1,0 +1,104 @@
+<template>
+  <div class="container">
+    <!-- <div class="mysel" style="margin-bottom: 20px;">
+      <el-select v-model="value" placeholder="请选择检测模型" >
+      </el-select>
+    </div> -->
+    <el-upload
+      :action="uploadURL"
+      list-type="picture-card"
+      multiple
+      :limit="6"
+      :on-preview="handlePictureCardPreview"
+      :on-remove="handleRemove"
+      :on-success="handlesuccess">
+      <i class="el-icon-plus"></i>
+    </el-upload>
+    <el-dialog :visible.sync="dialogVisible">
+      <img width="100%" :src="dialogImageUrl" alt="">
+    </el-dialog>
+    <el-button icon="" type="text" @click="but_test">
+      点击识别
+    </el-button>
+    <div class="myres">
+      <img width="20%" :src="'data:image/png;base64,'+detect_picture">
+    </div>
+  </div>
+</template>
+<script>
+  import request from "@/utils/request";
+  import axios from "axios";
+export default {
+  components: {
+  },
+  data() {
+    return {
+      // 图片要传到服务端的哪里(路由=process.env.VUE_APP_BASE_API+你要传图片的接口)
+      uploadURL:process.env.VUE_APP_BASE_API+"/test_moudle/updateinfo/",
+      // 前端上传的图片的地址
+      dialogImageUrl: '',
+      dialogVisible: false,
+      // 后端传过来的图片的base64形式
+      detect_picture: '',
+      queryParams: {
+        ipaddr: undefined,
+        userName: undefined
+      },
+    };
+  },
+  computed: {
+  },
+  watch: {
+    },
+    activeId: {
+  },
+  mounted() {
+  },
+  created(){
+    // this.visualize_data()
+  },
+  methods: {
+    // 测试前后端是否连通的函数
+  visualize_data() {
+		  return request({
+		    url: "/test_moudle/test", //get请求最后没有'/'
+		    method: "get",
+		  }).then(response=>{
+			  console.log('怎么可以这样',response)
+		  });
+		},
+    // 处理图片预览效果
+    handlePreview(){},
+    // 处理移除图片的操作
+    handleRemove(file, fileList) {
+      console.log(file, fileList);
+    },
+    // 点击文件列表中已上传的文件时的钩子
+    handlePictureCardPreview(file) {
+      // 这个“file”里默认包含了这张图片的所有信息：名字，url...
+      console.log("打印下zi",file);
+      this.dialogImageUrl = file.url;
+      this.dialogVisible = true;
+    },
+    but_test(){
+      console.log("这个函数是否执行")
+      this.uploadURL = process.env.VUE_APP_BASE_API+"/test_moudle/test/";
+    },
+    // 用这个函数去接收后端传过来的图片
+    handlesuccess(response, file, fileList){
+      console.log("打印下",file,fileList);
+      this.detect_picture = response.msg;
+    },
+    /** 重置按钮操作 */
+    resetQuery() {
+      this.resetForm("queryForm");
+      this.handleQuery();
+    },
+    /** 搜索按钮操作 */
+    handleQuery() {
+      this.pageNum = 1;
+      // this.getList();
+    },
+  }
+};
+</script>
