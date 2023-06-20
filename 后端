@@ -1,0 +1,73 @@
+def test(request):
+    result = {}
+    if request.method == 'POST':
+    #从前端接收图片
+        img = request.FILES.get('file')
+        print('打印名称和类型',type(img),img)
+        base_dir = settings.BASE_DIR                   # 当前的最高级目录（dvadmin-backend）
+        upload_dir = os.path.join(base_dir, 'upload')  # 在主目录下新建upload文件夹
+        path = os.path.join(upload_dir, img.name)      # 把前端传过来的图片保存在upload文件夹中
+        with open(path, 'wb+') as f:
+            for chunk in img.chunks():
+                f.write(chunk)
+        timestrap = str(time.time())
+# 从这里开始
+        parser = argparse.ArgumentParser()
+        # 1、选模型
+        # parser.add_argument('--weights', nargs='+', type=str, default='runs/train/exp/weights/best.pt', help='model.pt path(s)')
+        parser.add_argument('--weights', nargs='+', type=str,
+                            default=r'D:\Desktop\lfj\code\实验结果\expyolov5s原2\weights\best.pt', help='model.pt path(s)')
+        # parser.add_argument('--source', type=str, default='windmill/images/test', help='file/dir/URL/glob, 0 for webcam')
+        parser.add_argument('--source', type=str, default=path, help='file/dir/URL/glob, 0 for webcam')
+        # parser.add_argument('--source', type=str, default=img, help='file/dir/URL/glob, 0 for webcam')
+        # 输入图片的大小  默认640
+        parser.add_argument('--imgsz', '--img', '--img-size', type=int, default=640, help='inference size (pixels)')
+        # 置信度阈值  默认0.25
+        parser.add_argument('--conf-thres', type=float, default=0.25, help='confidence threshold')
+        # 做Nms的iou阈值
+        parser.add_argument('--iou-thres', type=float, default=0.45, help='NMS IoU threshold')
+        # 保留的最大检测框数量，每张图片中检测目标的个数最多为1000类
+        parser.add_argument('--max-det', type=int, default=1000, help='maximum detections per image')
+        # 设置设备CPU/GPU，这个可以不用设置
+        parser.add_argument('--device', default='', help='cuda device, i.e. 0 or 0,1,2,3 or cpu')
+        # 是否展示预测之后的图片
+        parser.add_argument('--view-img', action='store_true', help='show results')
+        # 是否将预测的框坐标以txt文件形式保存，默认False，使用save-txt在路径runs/detect/exp/labels/.txt下生成每张图片预测的txt文件
+        parser.add_argument('--save-txt', action='store_true', help='save results to *.txt')
+        # 是否将置信度conf也保存到txt文件中
+        parser.add_argument('--save-conf', action='store_true', help='save confidences in --save-txt labels')
+        parser.add_argument('--save-crop', action='store_true', help='save cropped prediction boxes')
+        parser.add_argument('--nosave', action='store_true', help='do not save images/videos')
+        # 设置只保留某一部分类别，形如0或者0  2  3
+        parser.add_argument('--classes', nargs='+', type=int, help='filter by class: --class 0, or --class 0 2 3')
+        parser.add_argument('--agnostic-nms', action='store_true', help='class-agnostic NMS')
+        parser.add_argument('--augment', action='store_true', help='augmented inference')
+        parser.add_argument('--visualize', action='store_true', help='visualize features')
+        parser.add_argument('--update', action='store_true', help='update all models')
+        # 保存测试日志的文件夹路径
+        parser.add_argument('--project', default='runs/detect', help='save results to project/name')
+        # 用时间戳生成文件夹timestrap  保存测试日志文件夹的名字，所以最终保存在project/name中
+        parser.add_argument('--name', default=timestrap, help='save results to project/name')
+        #
+        parser.add_argument('--exist-ok', action='store_true', help='existing project/name ok, do not increment')
+        # 画框的线条粗细---
+        parser.add_argument('--line-thickness', default=3, type=int, help='bounding box thickness (pixels)')
+        parser.add_argument('--hide-label s', default=False, action='store_true', help='hide labels')
+        parser.add_argument('--hide-conf', default=False, action='store_true', help='hide confidences')
+        parser.add_argument('--half', action='store_true', help='use FP16 half-precision inference')
+        opt = parser.parse_args(args=[])
+        main(opt)
+# 到这里结束，这些你都不用管
+# 2、图片传给前端
+        # 找到刚刚检测的图片，并把它转为base64形式，传给前端
+        res_path = os.path.join(base_dir, 'runs', 'detect', timestrap, img.name)
+        if os.path.exists(res_path):
+            print('有检测结果吧')
+            with open(res_path, 'rb') as f:
+                data = f.read()
+                result['msg'] = bytes.decode(base64.b64encode(data))
+        else:
+            result['msg'] = '有图片上传但是没有检测结果'
+    else:
+        result['msg'] = '没有图片上传'
+    return JsonResponse(result)
